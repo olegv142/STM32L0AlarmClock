@@ -1121,7 +1121,7 @@
     </group>
   </group>
   <group>
-    <name>Example</name>
+    <name>AlarmClock</name>
     <group>
       <name>EWARM</name>
       <file>

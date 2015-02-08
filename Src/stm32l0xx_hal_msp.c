@@ -81,6 +81,27 @@ void HAL_MspInit(void)
 }
 
 /**
+* @brief  LPTIM MSP Init
+* @param  hlptim : LPTIM handle
+* @retval None
+*/
+void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef *hlptim)
+{
+  /* ## - 1 - Enable LPTIM clock ############################################ */
+  __LPTIM1_CLK_ENABLE();
+  
+  /* ## - 2 - Force & Release the LPTIM Periheral Clock Reset ############### */  
+  /* Force the LPTIM Periheral Clock Reset */ 
+  __LPTIM1_FORCE_RESET();  
+  /* Release the LPTIM Periheral Clock Reset */  
+  __LPTIM1_RELEASE_RESET();  
+
+  /* Enable and set LPTIM Interrupt to the highest priority */
+  HAL_NVIC_SetPriority(LPTIM1_IRQn, 1, 0);
+  HAL_NVIC_EnableIRQ(LPTIM1_IRQn);  
+}
+
+/**
   * @brief  DeInitializes the Global MSP.
   * @param  None  
   * @retval None

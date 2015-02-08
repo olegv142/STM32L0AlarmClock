@@ -41,6 +41,8 @@
 #include "main.h"
 #include "stm32l0xx_it.h"
 
+extern LPTIM_HandleTypeDef LptimHandle;
+
 /** @addtogroup STM32L0xx_HAL_Examples
   * @{
   */
@@ -118,6 +120,17 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+}
+
+/**
+  * @brief  This function handles LPTIM interrupt request.
+  * @param  None
+  * @retval None
+  */
+void LPTIM1_IRQHandler(void)
+{
+  /* LPTIM in time Base mode */
+  HAL_LPTIM_IRQHandler(&LptimHandle); 
 }
 
 /******************************************************************************/

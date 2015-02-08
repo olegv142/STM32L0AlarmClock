@@ -50,8 +50,15 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+LPTIM_HandleTypeDef LptimHandle;
+
+/* Clocks structure declaration */
+static RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
+
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
+static void LSE_ClockEnable(void);
+static void LPTIM_Init(void);
 static void Error_Handler(void);
 
 /* Private functions ---------------------------------------------------------*/
@@ -78,6 +85,11 @@ int main(void)
   /* Configure the System clock to have a frequency of 2 MHz (Up to 32MHZ possible) */
   SystemClock_Config();
 
+  /* Enable 32768Hz external oscillator */
+  LSE_ClockEnable();
+
+  /* Initialize lop power timer */
+  LPTIM_Init();
 
   /* Add your application code here
      */
@@ -96,9 +108,60 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-    BSP_LED_Toggle(LED3);
     BSP_LED_Toggle(LED4);
     HAL_Delay(150);
+  }
+}
+
+static void LPTIM_Init(void)
+{
+  /* Re-target the LSE to Clock the LPTIM Counter */
+  /* Select the LSE clock as LPTIM peripheral clock */
+  RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
+  RCC_PeriphCLKInitStruct.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;  
+  HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
+
+  /* Initialize LPTIM peripheral */
+  LptimHandle.Instance = LPTIM1;
+  
+  LptimHandle.Init.Clock.Source    = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  LptimHandle.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
+  LptimHandle.Init.CounterSource   = LPTIM_COUNTERSOURCE_INTERNAL;  
+  LptimHandle.Init.Trigger.Source  = LPTIM_TRIGSOURCE_SOFTWARE; 
+  LptimHandle.Init.OutputPolarity  = LPTIM_OUTPUTPOLARITY_HIGH;
+  LptimHandle.Init.UpdateMode      = LPTIM_UPDATE_IMMEDIATE;
+  
+  /* Initialize LPTIM peripheral according to the passed parameters */
+  if (HAL_LPTIM_Init(&LptimHandle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* Enable Autoreload match interrupt */
+  __HAL_LPTIM_ENABLE_INTERRUPT(&LptimHandle, LPTIM_IT_ARRM);
+  __HAL_LPTIM_CLEAR_FLAG(&LptimHandle, LPTIM_IT_ARRM);
+
+  if (HAL_LPTIM_PWM_Start(&LptimHandle, 32768, 32768/2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)
+{
+    BSP_LED_Toggle(LED3);
+}
+
+/* Enable 32768Hz external oscillator */
+static void LSE_ClockEnable(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  
+  /* Enable LSE clock */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  if (HAL_OK != HAL_RCC_OscConfig(&RCC_OscInitStruct)) {
+    Error_Handler();
   }
 }
 
