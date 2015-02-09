@@ -141,7 +141,7 @@ static void LPTIM_Init(void)
   __HAL_LPTIM_ENABLE_INTERRUPT(&LptimHandle, LPTIM_IT_ARRM);
   __HAL_LPTIM_CLEAR_FLAG(&LptimHandle, LPTIM_IT_ARRM);
 
-  if (HAL_LPTIM_PWM_Start(&LptimHandle, 32768, 32768/2) != HAL_OK)
+  if (HAL_LPTIM_PWM_Start(&LptimHandle, LFHz-1, LFHz/2-1) != HAL_OK)
   {
     Error_Handler();
   }
