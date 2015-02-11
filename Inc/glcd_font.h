@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+#define MONO_SPACING (-1)
+#define LCD_WIDTH 172
+
 /*
  * The purpose of this module is to provide support for the GLCD lib fonts since they can be
  * created by freely available tools like MicoElectronica GLCD fonts creator.
@@ -36,4 +39,12 @@ static inline uint8_t const* glcd_font_sym_data(struct glcd_font const* font, ch
  */
 void glcd_print_str(unsigned x, unsigned y, const char* str, struct glcd_font const* font, int spacing);
 
-#define MONO_SPACING (-1)
+/* Calculate printed text length */
+unsigned glcd_printed_len(const char* str, struct glcd_font const* font, int spacing);
+
+/* Print string right aligned */
+static inline void glcd_print_str_r(unsigned x, unsigned y, const char* str, struct glcd_font const* font, int spacing)
+{
+	glcd_print_str(x - glcd_printed_len(str, font, spacing), y, str, font, spacing);
+}
+

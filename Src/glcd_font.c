@@ -49,7 +49,7 @@ static void glcd_draw_char(unsigned x, unsigned y, char c, uint8_t w, uint8_t h,
 void glcd_print_str(unsigned x, unsigned y, const char* str, struct glcd_font const* font, int spacing)
 {
 	unsigned h = (font->h + 3) / 4;
-	uint8_t empty_space = spacing > 0 ? spacing : 0;
+	unsigned empty_space = spacing > 0 ? spacing : 0;
 	for (;; ++str) {
 		char c = *str;
 		if (glcd_font_sym_valid(font, c)) {
@@ -61,3 +61,20 @@ void glcd_print_str(unsigned x, unsigned y, const char* str, struct glcd_font co
 			break;
 	}
 }
+
+/* Calculate printed text length */
+unsigned glcd_printed_len(const char* str, struct glcd_font const* font, int spacing)
+{
+	unsigned len = 0, empty_space = spacing > 0 ? spacing : 0;
+	for (;; ++str) {
+		char c = *str;
+		if (glcd_font_sym_valid(font, c)) {
+			uint8_t const* data = glcd_font_sym_data(font, c);
+			uint8_t w = spacing < 0 ? font->w : *data;
+			len += w + empty_space;
+		} else
+			break;
+	}
+	return len;
+}
+
