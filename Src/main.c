@@ -55,6 +55,9 @@ LPTIM_HandleTypeDef LptimHandle;
 /* Clocks structure declaration */
 static RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
 
+static struct time g_clock;
+static int g_clock_updated;
+
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void LSE_ClockEnable(void);
@@ -91,23 +94,44 @@ int main(void)
   /* Initialize lop power timer */
   LPTIM_Init();
 
-  /* Add your application code here
-     */
-
   BSP_LED_Init(LED3);
   BSP_LED_Init(LED4);
   BSP_LED_On(LED4);
 
+  if (adc_tv_init())
+  {
+    Error_Handler();
+  }
+
   BSP_EPD_Init();
-  BSP_EPD_Clear(EPD_COLOR_WHITE);
-  BSP_EPD_SetFont(&Font8);
-  glcd_print_str(0, 14, "Я будильник", &g_font_Lucida12x12, 0);
-  glcd_print_str(0, 0, "12:34", &g_font_Tahoma33x52, 5);
-  BSP_EPD_RefreshDisplay();
 
   /* Infinite loop */
+  g_clock_updated = 1;
   while (1)
   {
+    if (g_clock_updated)
+    {
+      struct adc_tv tv;
+      struct adc_tv_str tvs;
+      char str[TIME_BUFF_SZ];
+
+      if (adc_tv_get(&tv))
+      {
+        Error_Handler();
+      }
+      if (adc_tv_str(&tv, &tvs))
+      {
+        Error_Handler();
+      }
+
+      get_time_str(&g_clock, str);
+      BSP_EPD_Clear(EPD_COLOR_WHITE);
+      glcd_print_str(0,  14, tvs.v_str, &g_font_Lucida12x12, 1);
+      glcd_print_str(64, 14, tvs.t_str, &g_font_Lucida12x12, 1);
+      glcd_print_str(0, 0, str, &g_font_Tahoma33x52, 5);
+      BSP_EPD_RefreshDisplay();
+      g_clock_updated = 0;
+    }
     BSP_LED_Toggle(LED4);
     HAL_Delay(150);
   }
@@ -149,7 +173,10 @@ static void LPTIM_Init(void)
 
 void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
-    BSP_LED_Toggle(LED3);
+  if (clock_sec(&g_clock)) {
+    g_clock_updated = 1;
+  }
+  BSP_LED_Toggle(LED3);
 }
 
 /* Enable 32768Hz external oscillator */

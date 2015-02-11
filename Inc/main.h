@@ -44,8 +44,10 @@
 #include "stm32l0538_discovery.h"
 #include "stm32l0538_discovery_epd.h"
 
+#include "clock.h"
 #include "glcd_font.h"
 #include "glcd_fonts.h"
+#include "adc.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

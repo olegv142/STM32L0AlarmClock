@@ -102,6 +102,17 @@ void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef *hlptim)
 }
 
 /**
+* @brief  ADC MSP Init
+* @param  hadc : ADC handle
+* @retval None
+*/
+void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
+{
+  /* ADC1 Periph clock enable */
+  __ADC1_CLK_ENABLE();
+}
+
+/**
   * @brief  DeInitializes the Global MSP.
   * @param  None  
   * @retval None
