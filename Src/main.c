@@ -126,9 +126,11 @@ int main(void)
 
       get_time_str(&g_clock, str);
       BSP_EPD_Clear(EPD_COLOR_WHITE);
-      glcd_print_str(0,  15, tvs.v_str, &g_font_Lucida12x12, 1);
-      glcd_print_str(64, 13, tvs.t_str, &g_font_Lucida_Console13x20, 0);
-      glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48, 6);
+      glcd_print_str(0,  15, "00:00",   &g_font_Tahoma9x12Clk, 2);
+      glcd_print_str(0,  12, tvs.v_str, &g_font_Tahoma12x11Bld, 2);
+      glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
+      glcd_print_str_r(LCD_WIDTH, 13, "86%", &g_font_Tahoma19x20, 1);
+      glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48Clk, 6);
       BSP_EPD_RefreshDisplay();
       g_clock_updated = 0;
     }
