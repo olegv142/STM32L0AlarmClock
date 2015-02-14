@@ -55,14 +55,10 @@ LPTIM_HandleTypeDef LptimHandle;
 /* Clocks structure declaration */
 static RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
 
-static struct time g_clock;
-static int g_clock_updated;
-
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void LSE_ClockEnable(void);
 static void LPTIM_Init(void);
-static void Error_Handler(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -94,49 +90,8 @@ int main(void)
   /* Initialize lop power timer */
   LPTIM_Init();
 
-  BSP_LED_Init(LED3);
-  BSP_LED_Init(LED4);
-  BSP_LED_On(LED4);
-
-  if (adc_tv_init())
-  {
-    Error_Handler();
-  }
-
-  BSP_EPD_Init();
-
-  /* Infinite loop */
-  g_clock_updated = 1;
-  while (1)
-  {
-    if (g_clock_updated)
-    {
-      struct adc_tv tv;
-      struct adc_tv_str tvs;
-      char str[TIME_BUFF_SZ];
-
-      if (adc_tv_get(&tv))
-      {
-        Error_Handler();
-      }
-      if (adc_tv_str(&tv, &tvs))
-      {
-        Error_Handler();
-      }
-
-      get_time_str(&g_clock, str);
-      BSP_EPD_Clear(EPD_COLOR_WHITE);
-      glcd_print_str(0,  15, "00:00",   &g_font_Tahoma9x12Clk, 2);
-      glcd_print_str(0,  12, tvs.v_str, &g_font_Tahoma12x11Bld, 2);
-      glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
-      glcd_print_str_r(LCD_WIDTH, 13, "86%", &g_font_Tahoma19x20, 1);
-      glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48Clk, 6);
-      BSP_EPD_RefreshDisplay();
-      g_clock_updated = 0;
-    }
-    BSP_LED_Toggle(LED4);
-    HAL_Delay(150);
-  }
+  aclock_init();
+  aclock_loop();
 }
 
 static void LPTIM_Init(void)
@@ -175,10 +130,7 @@ static void LPTIM_Init(void)
 
 void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
-  if (clock_sec(&g_clock)) {
-    g_clock_updated = 1;
-  }
-  BSP_LED_Toggle(LED3);
+  aclock_sec_handler();
 }
 
 /* Enable 32768Hz external oscillator */
@@ -253,7 +205,7 @@ static void SystemClock_Config(void)
   * @param  None
   * @retval None
   */
-static void Error_Handler(void)
+void Error_Handler(void)
 {
   /* User may add here some code to deal with this error */
   while(1)

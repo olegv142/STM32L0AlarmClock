@@ -44,10 +44,7 @@
 #include "stm32l0538_discovery.h"
 #include "stm32l0538_discovery_epd.h"
 
-#include "clock.h"
-#include "glcd_font.h"
-#include "glcd_fonts.h"
-#include "adc.h"
+#include "aclock.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -56,6 +53,7 @@
 #define LFHz 32768
 
 /* Exported functions ------------------------------------------------------- */
+void Error_Handler(void);
 
 #endif /* __MAIN_H */
 

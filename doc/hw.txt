@@ -1,0 +1,27 @@
+Board modifications:
+
+1. Install low frequency resonator X2 (32768Hz).
+   Remove SB18, SB19. 
+   Install 0ohm resistors R70, R71.
+   Install C47, C50 (optional).
+
+2. Remove C12, C13, C14, R69.
+3. Close SB23..28
+
+Connections:
+
+1. LED display:
+  cathodes:
+   seg a    PA2   P3.13
+   seg b    PA3   P3.14
+   seg c    PA4   P3.15
+   seg d    PA5   P3.16
+   seg e    PA6   P3.17
+   seg f    PA7   P3.18
+   seg g    PB0   P3.19
+   seg dp   PB1   P3.20
+  anodes (dig 0 is the rightmost one):
+   dig 0    PB12  P2.23
+   dig 1    PB13  P2.22
+   dig 2    PB14  P2.21
+   dig 3    PB15  P2.20

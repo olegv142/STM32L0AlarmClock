@@ -78,6 +78,8 @@ void HAL_MspInit(void)
   /* NOTE : This function is generated automatically by STM32CubeMX and eventually  
             modified by the user
    */ 
+  __GPIOA_CLK_ENABLE();
+  __GPIOB_CLK_ENABLE();
 }
 
 /**
@@ -96,8 +98,8 @@ void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef *hlptim)
   /* Release the LPTIM Periheral Clock Reset */  
   __LPTIM1_RELEASE_RESET();  
 
-  /* Enable and set LPTIM Interrupt to the highest priority */
-  HAL_NVIC_SetPriority(LPTIM1_IRQn, 1, 0);
+  /* Enable and set LPTIM Interrupt to the priority below tick interrupt */
+  HAL_NVIC_SetPriority(LPTIM1_IRQn, TICK_INT_PRIORITY+1, 0);
   HAL_NVIC_EnableIRQ(LPTIM1_IRQn);  
 }
 
