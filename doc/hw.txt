@@ -7,9 +7,8 @@ Board modifications:
 
 2. Disconnect linear sensor: remove C12, C13, C14, close SB23..28.
 3. Disconnect red led: remove R69. 
-4. Disconnect EPD from main 3V3 rail and connect its power to MCU pin directly:
-   remove T6, R44, connect VDD_ePD1 to ePD1_PWR_ENn by soldering pins 3, 2 of T6.
-   Note that now we enable EPD by high level on ePD1_PWR_ENn.
+4. Disconnect EPD from main 3V3 rail and connect its power to MCU VCC directly:
+   remove T6, R44, connect pads 1,2 of removed T6 to middle pin of JP4.
 
 Connections:
 
