@@ -425,7 +425,7 @@ void EPD_IO_Init(void)
   HAL_GPIO_Init(EPD_BUSY_GPIO_PORT, &GPIO_InitStruct);
 
   /* Enbale Display */
-  EPD_PWR_LOW();
+  EPD_PWR_HIGH();
 
   /* Set or Reset the control line */
   EPD_CS_LOW();

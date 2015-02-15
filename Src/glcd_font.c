@@ -7,7 +7,7 @@
 
 #include "..\Components\gde021a1\gde021a1.h"
 
-static EPD_DrvTypeDef  *epd_drv = &gde021a1_drv;
+static EPD_DrvTypeDef *epd_drv = &gde021a1_drv;
 
 /* Put char in the specified position. Note that y is in 4 pixel groups */
 static void glcd_draw_char(unsigned x, unsigned y, char c, uint8_t w, uint8_t h, uint8_t const* data)

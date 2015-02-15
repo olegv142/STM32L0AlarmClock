@@ -2,6 +2,7 @@
 #include "glcd_font.h"
 #include "glcd_fonts.h"
 #include "aclock_ctl.h"
+#include "..\Components\gde021a1\gde021a1.h"
 
 /* MODE button */
 #define MODE_PORT GPIOA
@@ -12,6 +13,8 @@
 #define SET_PIN 2
 
 struct alarm_clock g_aclock;
+
+static EPD_DrvTypeDef *epd_drv = &gde021a1_drv;
 
 static void aclock_btn_init(GPIO_TypeDef* port, unsigned pin)
 {
@@ -104,6 +107,8 @@ static void aclock_epd_update(void)
 	glcd_print_str_r(LCD_WIDTH, 13, "86%", &g_font_Tahoma19x20, 1);
 	glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48Clk, 6);
 	BSP_EPD_RefreshDisplay();
+	/* Halt EPD charge pump to reduce power consumption */
+	epd_drv->CloseChargePump();
 }
 
 static void aclock_sleep(void)
