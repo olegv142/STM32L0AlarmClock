@@ -134,6 +134,16 @@ void LPTIM1_IRQHandler(void)
   HAL_LPTIM_IRQHandler(&LptimHandle); 
 }
 
+/**
+  * @brief  This function handles External lines 4 to 15 interrupt request.
+  * @param  None
+  * @retval None
+  */
+void EXTI0_1_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+}
+
 /******************************************************************************/
 /*                 STM32L0xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

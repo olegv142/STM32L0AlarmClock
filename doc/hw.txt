@@ -5,8 +5,11 @@ Board modifications:
    Install 0ohm resistors R70, R71.
    Install C47, C50 (optional).
 
-2. Remove C12, C13, C14, R69.
-3. Close SB23..28
+2. Disconnect linear sensor: remove C12, C13, C14, close SB23..28.
+3. Disconnect red led: remove R69. 
+4. Disconnect EPD from main 3V3 rail and connect its power to MCU pin directly:
+   remove T6, R44, connect VDD_ePD1 to ePD1_PWR_ENn by soldering pins 3, 2 of T6.
+   Note that now we enable EPD by high level on ePD1_PWR_ENn.
 
 Connections:
 
@@ -25,3 +28,4 @@ Connections:
    dig 1    PB13  P2.22
    dig 2    PB14  P2.21
    dig 3    PB15  P2.20
+

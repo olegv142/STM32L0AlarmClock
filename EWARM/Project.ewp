@@ -963,7 +963,13 @@
         <name>$PROJ_DIR$\..\Src\aclock.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\Src\aclock_ctl.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\Src\adc.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\Src\btn.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\Src\clock.c</name>

@@ -64,6 +64,7 @@ static unsigned char disp_char_map[] = {
 	['7'] = _a_|_b_|_c_,
 	['8'] = _a_|_b_|_c_|_d_|_e_|_f_|_g_,
 	['9'] = _a_|_b_|_c_|_d_|_f_|_g_,
+	['-'] = _g_,
 };
 
 static inline void set_reg_bits(uint32_t volatile* r, uint32_t val, uint32_t mask)
@@ -144,4 +145,12 @@ void led_display_show(struct led_display* ld, unsigned low, unsigned high)
 	ld->dig[2] = '0' + (high % 10);
 	v = high / 10;
 	ld->dig[3] = v ? '0' + v : 0;
+}
+
+void led_display_clear(struct led_display* ld)
+{
+	int i;
+	for (i = 0; i < LED_DIGS; ++i)
+		ld->dig[i] = 0;
+	ld->dp_mask = ld->blink_mask = 0;
 }

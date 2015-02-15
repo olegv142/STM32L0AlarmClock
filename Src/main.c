@@ -150,8 +150,8 @@ static void LSE_ClockEnable(void)
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow : 
   *            System Clock source            = MSI
-  *            SYSCLK(Hz)                     = 2000000
-  *            HCLK(Hz)                       = 2000000
+  *            SYSCLK(Hz)                     = 4000000
+  *            HCLK(Hz)                       = 4000000
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 1
   *            APB2 Prescaler                 = 1
@@ -176,7 +176,7 @@ static void SystemClock_Config(void)
   /* Enable MSI Oscillator */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
   RCC_OscInitStruct.MSICalibrationValue=0x00;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -184,8 +184,7 @@ static void SystemClock_Config(void)
     /* Initialization Error */
     Error_Handler();
   }
-  
-  
+
   /* Select MSI as system clock source and configure the HCLK, PCLK1 and PCLK2 
      clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);

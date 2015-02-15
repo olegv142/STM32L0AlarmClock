@@ -14,3 +14,4 @@ void led_display_on(struct led_display* ld);
 void led_display_off(struct led_display* ld);
 void led_display_refresh(struct led_display* ld);
 void led_display_show(struct led_display* ld, unsigned low, unsigned high);
+void led_display_clear(struct led_display* ld);

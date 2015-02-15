@@ -80,6 +80,7 @@ void HAL_MspInit(void)
    */ 
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
+  __GPIOH_CLK_ENABLE();
 }
 
 /**
