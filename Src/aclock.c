@@ -10,7 +10,18 @@
 
 /* SET button */
 #define SET_PORT GPIOH
-#define SET_PIN 2
+#define SET_PIN  2
+
+/* Alarm port */
+#define ALARM_PORT GPIOH
+#define ALARM_PIN  1
+
+/* Alarm signal timing parameters */
+#define ALARM_PULSE_BIT (1 << 6)
+#define ALARM_PULSES 6
+
+/* UI and alarming */
+#define TIMEOUT 120 /* 2 min */
 
 struct alarm_clock g_aclock;
 
@@ -24,7 +35,7 @@ static void aclock_btn_init(GPIO_TypeDef* port, unsigned pin)
 	GPIO_InitStruct.Pin = pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
 	HAL_GPIO_Init(port, &GPIO_InitStruct);
 }
 
@@ -43,9 +54,47 @@ static void aclock_btn_init_exti(GPIO_TypeDef* port, unsigned pin)
 	HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 }
 
+static void aclock_alarm_pin_init(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	/* Configure alarm pin as output */
+	GPIO_InitStruct.Pin = ALARM_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(ALARM_PORT, &GPIO_InitStruct);
+}
+
+static inline void aclock_alarm_init(void)
+{
+	g_aclock.alarm_signalling = -1;
+	aclock_alarm_pin_init();
+}
+
+static inline void aclock_alarm_signal_on(void)
+{
+	HAL_GPIO_WritePin(ALARM_PORT, ALARM_PIN, GPIO_PIN_SET);
+}
+
+static inline void aclock_alarm_signal_off(void)
+{
+	HAL_GPIO_WritePin(ALARM_PORT, ALARM_PIN, GPIO_PIN_RESET);
+}
+
+static inline int aclock_alarming(void)
+{
+	return g_aclock.alarm_signalling >= 0;
+}
+
 static inline int aclock_btn_read(GPIO_TypeDef* port, unsigned pin)
 {
 	return port->IDR & pin; 
+}
+
+static inline void aclock_set_idle_mode(void)
+{
+	aclock_set_mode(&g_aclock, displ_off, aclock_idle_handler);
 }
 
 void aclock_init(void)
@@ -60,36 +109,66 @@ void aclock_init(void)
 	aclock_btn_init(SET_PORT,  SET_PIN);
 	aclock_btn_init(MODE_PORT, MODE_PIN);
 	aclock_btn_init_exti(MODE_PORT, MODE_PIN);
-
+	aclock_alarm_init();
 	led_display_init(&g_aclock.display);
-	aclock_set_mode(&g_aclock, displ_off, aclock_idle_handler);
+	aclock_set_idle_mode();
+	
+	// Test
+	g_aclock.alarm.min = 1;
+	g_aclock.alarm_enabled = 1;
 }
 
+/* Called every second */
 void aclock_sec_handler(void)
 {
 	++g_aclock.sec_clock;
+	g_aclock.sec_ticks = 0;
 	if (clock_sec(&g_aclock.clock)) {
 		g_aclock.clock_updated = 1;
-		if (g_aclock.display_mode == displ_show_hm)
+		if (g_aclock.display_mode == displ_show_hm) {
 			led_display_show(&g_aclock.display, g_aclock.clock.min, g_aclock.clock.hou);
+		}
 	}
-	if (g_aclock.display_mode == displ_show_ms)
+	if (g_aclock.display_mode == displ_show_ms) {
 		led_display_show(&g_aclock.display, g_aclock.clock.sec, g_aclock.clock.min);
+	}
+	if (aclock_alarming()) {
+		if (g_aclock.alarm_signalling < ALARM_PULSES) {
+			++g_aclock.alarm_signalling;
+		}
+		g_aclock.alarm_pulse = 0;
+	}
 }
 
+/* Called every millisecond */
 void aclock_tick_handler(void)
 {
+	unsigned sec_ticks_ = g_aclock.sec_ticks;
+	g_aclock.sec_ticks  = sec_ticks_ + 1;
 	led_display_refresh(&g_aclock.display);
 	btn_update(&g_aclock.btn_mode, aclock_btn_read(MODE_PORT, MODE_PIN));
-	btn_update(&g_aclock.btn_mode, aclock_btn_read(SET_PORT,  SET_PIN));
+	btn_update(&g_aclock.btn_set,  aclock_btn_read(SET_PORT,  SET_PIN));
+	if (aclock_alarming() && g_aclock.alarm_pulse < g_aclock.alarm_signalling)
+	{
+		int a_ = sec_ticks_ & ALARM_PULSE_BIT, a = g_aclock.sec_ticks & ALARM_PULSE_BIT;
+		if (a != a_) {
+			if (a) {
+				aclock_alarm_signal_on();
+			} else {
+				aclock_alarm_signal_off();
+				++g_aclock.alarm_pulse;
+			}
+		}
+	}
 }
 
+/* Update EP display */
 static void aclock_epd_update(void)
 {
 	struct adc_tv tv;
 	struct adc_tv_str tvs;
 	char str[TIME_BUFF_SZ];
-
+	/* Measure temperature / voltage */
 	if (adc_tv_get(&tv))
 	{
 		Error_Handler();
@@ -98,20 +177,28 @@ static void aclock_epd_update(void)
 	{
 		Error_Handler();
 	}
-
-	get_time_str(&g_aclock.clock, str);
+	/* Clear display */
 	BSP_EPD_Clear(EPD_COLOR_WHITE);
-	glcd_print_str(0,  15, "00:00",   &g_font_Tahoma9x12Clk, 2);
+	if (g_aclock.alarm_enabled) {
+		/* Alarm time */
+		get_time_str(&g_aclock.alarm, str);
+		glcd_print_str(0,  15, str, &g_font_Tahoma9x12Clk, 2);
+	}
+	/* Temperature / voltage */
 	glcd_print_str(0,  12, tvs.v_str, &g_font_Tahoma12x11Bld, 2);
 	glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
+	/* Humidity (TBD) */
 	glcd_print_str_r(LCD_WIDTH, 13, "86%", &g_font_Tahoma19x20, 1);
+	/* Current time */
+	get_time_str(&g_aclock.clock, str);
 	glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48Clk, 6);
 	BSP_EPD_RefreshDisplay();
 	/* Halt EPD charge pump to reduce power consumption */
 	epd_drv->CloseChargePump();
 }
 
-static void aclock_sleep(void)
+/* Stop ticks and goes to sleep to save power */
+static inline void aclock_sleep(void)
 {
 	HAL_SuspendTick();
 	/* Enter Sleep Mode, wake up is done once MODE push button is pressed */
@@ -119,6 +206,43 @@ static void aclock_sleep(void)
 	HAL_ResumeTick();
 }
 
+/* Stop alarming */
+static inline void aclock_alarm_stop(void)
+{
+	g_aclock.alarm_signalling = -1;
+	aclock_alarm_signal_off();
+	aclock_set_idle_mode();
+}
+
+/* Event handler for alarming */
+static void aclock_alarm_handler(struct alarm_clock* ac)
+{
+	if (!ac->btn_mode.released && !ac->btn_set.released)
+		return;
+	aclock_alarm_stop();
+}
+
+/* Start alarming */
+static inline void aclock_alarm_start(void)
+{
+	g_aclock.alarm_pulse = 0;
+	g_aclock.alarm_signalling = 0;
+	g_aclock.last_evt_sec = g_aclock.sec_clock;
+	aclock_set_mode(&g_aclock, displ_show_hm, aclock_alarm_handler);
+}
+
+/* Check alarm activation */
+static inline void aclock_check_alarm(void)
+{
+	if (!g_aclock.alarm_enabled)
+		return;
+	if (aclock_alarming())
+		return;
+	if (g_aclock.clock.hou == g_aclock.alarm.hou && g_aclock.clock.min == g_aclock.alarm.min)
+		aclock_alarm_start();
+}
+
+/* The main loop, never return */
 void aclock_loop(void)
 {
 	/* Infinite loop */
@@ -128,6 +252,7 @@ void aclock_loop(void)
 		if (g_aclock.clock_updated)
 		{
 			g_aclock.clock_updated = 0;
+			aclock_check_alarm();
 			aclock_epd_update();
 		}
 		if (btn_has_events(&g_aclock.btn_mode) || btn_has_events(&g_aclock.btn_set))
@@ -136,14 +261,22 @@ void aclock_loop(void)
 			g_aclock.btn_mode.events = g_aclock.btn_set.events = 0;
 			g_aclock.last_evt_sec = g_aclock.sec_clock;
 		}
-		if (g_aclock.display_mode == displ_off && !btn_is_pending(&g_aclock.btn_mode) && !btn_is_pending(&g_aclock.btn_set)) {
-			aclock_sleep();
-		} else if ((int)(g_aclock.sec_clock - g_aclock.last_evt_sec) > DISPLAY_TIMEOUT) {
-			aclock_set_mode(&g_aclock, displ_off, aclock_idle_handler);
+		if (!btn_is_pending(&g_aclock.btn_mode) && !btn_is_pending(&g_aclock.btn_set))
+		{
+			if (g_aclock.display_mode == displ_off) {
+				aclock_sleep();
+			} else if ((int)(g_aclock.sec_clock - g_aclock.last_evt_sec) > TIMEOUT) {
+				if (aclock_alarming()) {
+					aclock_alarm_stop();
+				} else {
+					aclock_set_idle_mode();
+				}
+			}
 		}
 	}
 }
 
+/* Set mode and event handler routine */
 void aclock_set_mode(struct alarm_clock* ac, display_mode_t dm, aclock_handler_t h)
 {
 	ac->handler = h;

@@ -6,9 +6,10 @@ Board modifications:
    Install C47, C50 (optional).
 
 2. Disconnect linear sensor: remove C12, C13, C14, close SB23..28.
-3. Disconnect red led: remove R69. 
+3. Disconnect red led: remove R69.
 4. Disconnect EPD from main 3V3 rail and connect its power to MCU VCC directly:
    remove T6, R44, connect pads 1,2 of removed T6 to middle pin of JP4.
+5. Disconnect ST-Link clock: SB21 close, SB20 open.
 
 Connections:
 
@@ -28,3 +29,8 @@ Connections:
    dig 2    PB14  P2.21
    dig 3    PB15  P2.20
 
+2. Buttons (to VCC):
+  MODE (USER) PA0   P3.11
+  SET         PH1   P3.8
+
+3. Alarm buzzer: PH0 P3.7

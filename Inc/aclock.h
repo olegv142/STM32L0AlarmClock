@@ -12,8 +12,6 @@ typedef enum {
 	displ_show_ms,
 } display_mode_t;
 
-#define DISPLAY_TIMEOUT 120 /* 2 min */
-
 struct alarm_clock;
 
 typedef void (*aclock_handler_t)(struct alarm_clock*);
@@ -22,7 +20,6 @@ struct alarm_clock {
 	/* The clock */
 	struct time        clock;
 	struct time        alarm;	
-	int                clock_updated;
 	/* LED display */
 	struct led_display display;
 	display_mode_t     display_mode;
@@ -33,8 +30,14 @@ struct alarm_clock {
 	aclock_handler_t   handler;
 	/* Seconds clock */
 	unsigned           sec_clock;
-	/* Last event time */
+	unsigned           sec_ticks;
+	/* Last events time */
 	unsigned           last_evt_sec;
+	/* Status flags */
+	int8_t             clock_updated;
+	int8_t             alarm_enabled;
+	int8_t             alarm_signalling;
+	int8_t             alarm_pulse;
 };
 
 void aclock_init(void);
