@@ -21,8 +21,8 @@
 #define ALARM_PULSE_BIT (1 << 6)
 #define ALARM_PULSES 6
 
-/* UI and alarming */
-#define TIMEOUT 120 /* 2 min */
+#define UI_TIMEOUT    120 /* 2 min */
+#define ALARM_TIMEOUT 300 /* 5 min */
 
 struct alarm_clock g_aclock;
 
@@ -113,10 +113,6 @@ void aclock_init(void)
 	aclock_alarm_init();
 	led_display_init(&g_aclock.display);
 	aclock_set_idle_mode();
-	
-	// Test
-	g_aclock.alarm.min = 1;
-	g_aclock.alarm_enabled = 1;
 }
 
 /* Called every second */
@@ -222,8 +218,7 @@ static inline void aclock_alarm_stop(void)
 /* Event handler for alarming */
 static void aclock_alarm_handler(struct alarm_clock* ac)
 {
-	if (!ac->btn_mode.released && !ac->btn_set.released)
-		return;
+	/* Stop on any event */
 	aclock_alarm_stop();
 }
 
@@ -260,21 +255,26 @@ void aclock_loop(void)
 			aclock_check_alarm();
 			aclock_epd_update();
 		}
-		if (btn_has_events(&g_aclock.btn_mode) || btn_has_events(&g_aclock.btn_set))
+		if (btn_has_event(&g_aclock.btn_mode) || btn_has_event(&g_aclock.btn_set))
 		{
 			g_aclock.handler(&g_aclock);
-			g_aclock.btn_mode.events = g_aclock.btn_set.events = 0;
+			btn_set_event_handled(&g_aclock.btn_mode);
+			btn_set_event_handled(&g_aclock.btn_set);
 			g_aclock.last_evt_sec = g_aclock.sec_clock;
 		}
 		if (!btn_is_pending(&g_aclock.btn_mode) && !btn_is_pending(&g_aclock.btn_set))
 		{
 			if (g_aclock.display_mode == displ_off) {
 				aclock_sleep();
-			} else if ((int)(g_aclock.sec_clock - g_aclock.last_evt_sec) > TIMEOUT) {
+			} else {
 				if (aclock_alarming()) {
-					aclock_alarm_stop();
+					if ((int)(g_aclock.sec_clock - g_aclock.last_evt_sec) > ALARM_TIMEOUT) {
+						aclock_alarm_stop();
+					}
 				} else {
-					aclock_set_idle_mode();
+					if ((int)(g_aclock.sec_clock - g_aclock.last_evt_sec) > UI_TIMEOUT) {
+						aclock_set_idle_mode();
+					}
 				}
 			}
 		}

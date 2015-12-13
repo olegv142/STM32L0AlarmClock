@@ -46,3 +46,8 @@ void aclock_tick_handler(void);
 void aclock_loop(void);
 
 void aclock_set_mode(struct alarm_clock* ac, display_mode_t dm, aclock_handler_t h);
+
+static inline void aclock_refresh(struct alarm_clock* ac)
+{
+	ac->clock_updated = 1;
+}
