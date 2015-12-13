@@ -144,6 +144,17 @@ void EXTI0_1_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
 
+/**
+  * @brief  This function handles I2C event interrupt request.  
+  * @param  None
+  * @retval None
+  */
+void I2Cx_IRQHandler(void)
+{
+  HAL_I2C_EV_IRQHandler(&I2CxHandle);
+  HAL_I2C_ER_IRQHandler(&I2CxHandle);
+}
+
 /******************************************************************************/
 /*                 STM32L0xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */

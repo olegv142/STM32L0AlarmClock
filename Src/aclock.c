@@ -3,6 +3,7 @@
 #include "glcd_fonts.h"
 #include "aclock_ctl.h"
 #include "..\Components\gde021a1\gde021a1.h"
+#include "htu21d.h"
 
 /* MODE button */
 #define MODE_PORT GPIOA
@@ -162,12 +163,15 @@ void aclock_tick_handler(void)
 	}
 }
 
+#define BUFF_SZ TIME_BUFF_SZ
+
 /* Update EP display */
 static void aclock_epd_update(void)
 {
 	struct adc_tv tv;
 	struct adc_tv_str tvs;
-	char str[TIME_BUFF_SZ];
+	char buff[BUFF_SZ+1];
+	buff[BUFF_SZ] = 0;
 	/* Measure temperature / voltage */
 	if (adc_tv_get(&tv))
 	{
@@ -181,17 +185,18 @@ static void aclock_epd_update(void)
 	BSP_EPD_Clear(EPD_COLOR_WHITE);
 	if (g_aclock.alarm_enabled) {
 		/* Alarm time */
-		get_time_str(&g_aclock.alarm, str);
-		glcd_print_str(0,  15, str, &g_font_Tahoma9x12Clk, 2);
+		get_time_str(&g_aclock.alarm, buff);
+		glcd_print_str(0,  15, buff, &g_font_Tahoma9x12Clk, 2);
 	}
 	/* Temperature / voltage */
 	glcd_print_str(0,  12, tvs.v_str, &g_font_Tahoma12x11Bld, 2);
 	glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
-	/* Humidity (TBD) */
-	glcd_print_str_r(LCD_WIDTH, 13, "86%", &g_font_Tahoma19x20, 1);
+	/* Humidity */
+	htu21d_get_humidity_str(buff, BUFF_SZ);
+	glcd_print_str_r(LCD_WIDTH, 13, buff, &g_font_Tahoma19x20, 1);
 	/* Current time */
-	get_time_str(&g_aclock.clock, str);
-	glcd_print_str_r(LCD_WIDTH, 0, str, &g_font_Tahoma29x48Clk, 6);
+	get_time_str(&g_aclock.clock, buff);
+	glcd_print_str_r(LCD_WIDTH, 0, buff, &g_font_Tahoma29x48Clk, 6);
 	BSP_EPD_RefreshDisplay();
 	/* Halt EPD charge pump to reduce power consumption */
 	epd_drv->CloseChargePump();

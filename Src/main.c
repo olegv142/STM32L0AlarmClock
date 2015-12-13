@@ -52,6 +52,9 @@
 /* Private variables ---------------------------------------------------------*/
 LPTIM_HandleTypeDef LptimHandle;
 
+/* I2C handler declaration */
+I2C_HandleTypeDef I2CxHandle;
+
 /* Clocks structure declaration */
 static RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
 
@@ -59,6 +62,8 @@ static RCC_PeriphCLKInitTypeDef RCC_PeriphCLKInitStruct;
 static void SystemClock_Config(void);
 static void LSE_ClockEnable(void);
 static void LPTIM_Init(void);
+static void I2CxInit(void);
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -89,6 +94,9 @@ int main(void)
 
   /* Initialize lop power timer */
   LPTIM_Init();
+
+  /* Initialize I2C */
+  I2CxInit();
 
   aclock_init();
   aclock_loop();
@@ -124,6 +132,26 @@ static void LPTIM_Init(void)
 
   if (HAL_LPTIM_PWM_Start(&LptimHandle, LFHz-1, 1) != HAL_OK)
   {
+    Error_Handler();
+  }
+}
+
+static void I2CxInit(void)
+{
+  /*##-1- Configure the I2C peripheral #######################################*/
+  /* PRESC=0, SCLL=0x13, SCLH=0xf, SDADEL=2, SCLDEL=4 */
+  I2CxHandle.Instance              = I2Cx;
+  I2CxHandle.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+  I2CxHandle.Init.Timing           = 0x420f13;
+  I2CxHandle.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLED;
+  I2CxHandle.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  I2CxHandle.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLED;
+  I2CxHandle.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLED;
+  I2CxHandle.Init.OwnAddress1      = 1;
+  I2CxHandle.Init.OwnAddress2      = 0;
+  if (HAL_I2C_Init(&I2CxHandle) != HAL_OK)
+  {
+    /* Initialization Error */
     Error_Handler();
   }
 }

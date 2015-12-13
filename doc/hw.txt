@@ -33,4 +33,8 @@ Connections:
   MODE (USER) PA0   P3.11
   SET         PH1   P3.8
 
-3. Alarm buzzer: PH0 P3.7
+3. Alarm buzzer (to GND): PH0 P3.7
+
+4. Humidity sensor HTU21D:
+  SDA  PB7  P2.7 
+  SCL  PB6  P2.8
