@@ -160,19 +160,28 @@ void aclock_tick_handler(void)
 	}
 }
 
+/* Minimum allowed voltage in 1/100 V units */
+#define BATT_TRESHOLD 300
+
 #define BUFF_SZ TIME_BUFF_SZ
 
 /* Update EP display */
-static void aclock_epd_update(void)
+static int aclock_epd_update(int last_status)
 {
+	int res = 0;
 	struct adc_tv tv;
 	struct adc_tv_str tvs;
 	char buff[BUFF_SZ+1];
 	buff[BUFF_SZ] = 0;
-	/* Measure temperature / voltage */
+	/* Measure temperature / battery voltage */
 	if (adc_tv_get(&tv))
 	{
 		Error_Handler();
+	}
+	if (tv.v_val < BATT_TRESHOLD) {
+		res = -1;
+		if (last_status)
+			return res;
 	}
 	if (adc_tv_str(&tv, &tvs))
 	{
@@ -187,16 +196,21 @@ static void aclock_epd_update(void)
 	}
 	/* Temperature / voltage */
 	glcd_print_str(0,  12, tvs.v_str, &g_font_Tahoma12x11Bld, 2);
-	glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
-	/* Humidity */
-	htu21d_get_humidity_str(buff, BUFF_SZ);
-	glcd_print_str_r(LCD_WIDTH, 13, buff, &g_font_Tahoma19x20, 1);
-	/* Current time */
-	get_time_str(&g_aclock.clock, buff);
-	glcd_print_str_r(LCD_WIDTH, 0, buff, &g_font_Tahoma29x48Clk, 6);
+	if (res) {
+		glcd_print_str(55, 12, "Low batt !", &g_font_Tahoma19x20, 1);
+	} else {
+		glcd_print_str(55, 13, tvs.t_str, &g_font_Tahoma19x20, 1);
+		/* Humidity */
+		htu21d_get_humidity_str(buff, BUFF_SZ);
+		glcd_print_str_r(LCD_WIDTH, 13, buff, &g_font_Tahoma19x20, 1);
+		/* Current time */
+		get_time_str(&g_aclock.clock, buff);
+		glcd_print_str_r(LCD_WIDTH, 0, buff, &g_font_Tahoma29x48Clk, 6);
+	}
 	BSP_EPD_RefreshDisplay();
 	/* Halt EPD charge pump to reduce power consumption */
 	epd_drv->CloseChargePump();
+	return res;
 }
 
 /* Stop ticks and goes to sleep to save power */
@@ -246,6 +260,7 @@ static inline void aclock_check_alarm(void)
 /* The main loop, never return */
 void aclock_loop(void)
 {
+	int res = 0;
 	/* Infinite loop */
 	g_aclock.clock_updated = 1;
 	for (;;)
@@ -253,9 +268,15 @@ void aclock_loop(void)
 		if (g_aclock.clock_updated)
 		{
 			g_aclock.clock_updated = 0;
-			aclock_check_alarm();
-			aclock_epd_update();
+			res = aclock_epd_update(res);
+			if (!res) {
+				aclock_check_alarm();
+			}
 		}
+		if (res) {
+			aclock_sleep();
+			continue;
+		}	
 		if (btn_has_event(&g_aclock.btn_mode) || btn_has_event(&g_aclock.btn_set))
 		{
 			g_aclock.handler(&g_aclock);
