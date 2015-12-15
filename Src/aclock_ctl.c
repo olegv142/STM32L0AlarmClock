@@ -96,18 +96,27 @@ static int display_pos(struct alarm_clock* ac)
 	return -1;
 }
 
+static int max_digit(int pos)
+{
+	if (pos == LED_DIGS-1)
+		return '2';
+	if (pos == 1)
+		return '5';
+	return '9';
+}
+
 static void aclock_set_time_handler(struct alarm_clock* ac)
 {
 	int i;
 	switch (btn_get_event(&ac->btn_set)) {
 	case btn_long_pressed:
-		ac->clock.hou = led_display_high(&ac->display);
-		ac->clock.min = led_display_low(&ac->display);
+		ac->clock.hou = led_display_high(&ac->display) % 24;
+		ac->clock.min = led_display_low(&ac->display) % 60;
 		aclock_set_mode(ac, displ_show_hm, aclock_hm_handler);
 		return;
 	case btn_released:
 		i = display_pos(ac);
-		if (++ac->display.dig[i] > (i == LED_DIGS-1 ? '2' : '9')) {
+		if (++ac->display.dig[i] > max_digit(i)) {
 			ac->display.dig[i] = '0';
 		}
 		return;
@@ -128,13 +137,13 @@ static void aclock_set_alarm_handler(struct alarm_clock* ac)
 	int i;
 	switch (btn_get_event(&ac->btn_set)) {
 	case btn_long_pressed:
-		ac->alarm.hou = led_display_high(&ac->display);
-		ac->alarm.min = led_display_low(&ac->display);
+		ac->alarm.hou = led_display_high(&ac->display) % 24;
+		ac->alarm.min = led_display_low(&ac->display) % 60;
 		aclock_set_mode(ac, displ_show_alarm, aclock_alarm_handler);
 		return;
 	case btn_released:
 		i = display_pos(ac);
-		if (++ac->display.dig[i] > (i == LED_DIGS-1 ? '2' : '9')) {
+		if (++ac->display.dig[i] > max_digit(i)) {
 			ac->display.dig[i] = '0';
 		}
 		return;
