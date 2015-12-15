@@ -6,17 +6,17 @@ int clock_sec(struct time* t)
 	++t->sec;
 	if (t->sec < 60)
 		return 0;
-	t->sec = 0;
+	t->sec -= 60;
 	/* next minute */
 	++t->min;
 	if (t->min < 60)
 		return 1;
-	t->min = 0;
+	t->min -= 60;
 	/* next hour */
 	++t->hou;
 	if (t->hou < 24)
 		return 1;
-	t->hou = 0;
+	t->hou -= 24;
 	return 1;
 }
 

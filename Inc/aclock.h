@@ -7,9 +7,9 @@
 
 typedef enum {
 	displ_off,
-	displ_on,
 	displ_show_hm,
 	displ_show_ms,
+	displ_show_alarm,
 } display_mode_t;
 
 struct alarm_clock;

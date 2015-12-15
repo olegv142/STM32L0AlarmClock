@@ -46,7 +46,7 @@ static void aclock_btn_init_exti(GPIO_TypeDef* port, unsigned pin)
 
 	/* Configure Button pin as input with External interrupt */
 	GPIO_InitStruct.Pin = pin;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	HAL_GPIO_Init(port, &GPIO_InitStruct);
 
@@ -108,7 +108,6 @@ void aclock_init(void)
 	BSP_EPD_Init();
 
 	aclock_btn_init(SET_PORT,  SET_PIN);
-	aclock_btn_init(MODE_PORT, MODE_PIN);
 	aclock_btn_init_exti(MODE_PORT, MODE_PIN);
 	aclock_alarm_init();
 	led_display_init(&g_aclock.display);
@@ -123,11 +122,13 @@ void aclock_sec_handler(void)
 	if (clock_sec(&g_aclock.clock)) {
 		g_aclock.clock_updated = 1;
 		if (g_aclock.display_mode == displ_show_hm) {
-			led_display_show(&g_aclock.display, g_aclock.clock.min, g_aclock.clock.hou);
+			if (!g_aclock.display.blink_mask)
+				led_display_show(&g_aclock.display, g_aclock.clock.min, g_aclock.clock.hou);
 		}
 	}
 	if (g_aclock.display_mode == displ_show_ms) {
-		led_display_show(&g_aclock.display, g_aclock.clock.sec, g_aclock.clock.min);
+		if (!g_aclock.display.blink_mask)
+			led_display_show(&g_aclock.display, g_aclock.clock.sec, g_aclock.clock.min);
 	}
 	if (aclock_alarming()) {
 		if (g_aclock.alarm_signalling < ALARM_PULSES) {
@@ -285,8 +286,6 @@ void aclock_loop(void)
 void aclock_set_mode(struct alarm_clock* ac, display_mode_t dm, aclock_handler_t h)
 {
 	ac->handler = h;
-	if (dm == ac->display_mode)
-		return;
 	if (dm == displ_off) {
 		led_display_off(&ac->display);
 	} else {
@@ -298,6 +297,10 @@ void aclock_set_mode(struct alarm_clock* ac, display_mode_t dm, aclock_handler_t
 		case displ_show_ms:
 			g_aclock.display.dp_mask = 1 << 2;
 			led_display_show(&g_aclock.display, g_aclock.clock.sec, g_aclock.clock.min);
+			break;
+		case displ_show_alarm:
+			g_aclock.display.dp_mask = ~0;
+			led_display_show(&g_aclock.display, g_aclock.alarm.min, g_aclock.alarm.hou);
 			break;
 		}
 		led_display_on(&ac->display);
