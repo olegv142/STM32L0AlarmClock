@@ -11,6 +11,10 @@ Board modifications:
    remove T6, R44, connect pads 1,2 of removed T6 to middle pin of JP4.
 5. Disconnect ST-Link clock: SB21 close, SB20 open.
 
+After final programming:
+6. Disconnect ST-Link NRST: SB13 open.
+7. Remove SWD and power jumpers to disconnect from ST-Link.
+
 Connections:
 
 1. LED display:
@@ -38,3 +42,5 @@ Connections:
 4. Humidity sensor HTU21D:
   SDA  PB7  P2.7 
   SCL  PB6  P2.8
+
+5. Power is supplied from 1 sell LiPo, stabilized by LT1761-3.3
