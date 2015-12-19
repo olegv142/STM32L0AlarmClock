@@ -274,6 +274,7 @@ void aclock_loop(void)
 			}
 		}
 		if (res) {
+			aclock_set_idle_mode();
 			aclock_sleep();
 			continue;
 		}	
