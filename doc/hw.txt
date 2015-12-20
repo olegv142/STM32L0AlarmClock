@@ -7,13 +7,16 @@ Board modifications:
 
 2. Disconnect linear sensor: remove C12, C13, C14, close SB23..28.
 3. Disconnect red led: remove R69.
+
+Power modifications:
 4. Disconnect EPD from main 3V3 rail and connect its power to MCU VCC directly:
    remove T6, R44, connect pads 1,2 of removed T6 to middle pin of JP4.
 5. Disconnect ST-Link clock: SB21 close, SB20 open.
+6. Remove R50.
 
 After final programming:
-6. Disconnect ST-Link NRST: SB13 open.
-7. Remove SWD and power jumpers to disconnect from ST-Link.
+7. Disconnect ST-Link NRST: SB13 open.
+8. Remove SWD (CN4) and power (JP4) jumpers to disconnect from ST-Link. 
 
 Connections:
 
