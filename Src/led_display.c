@@ -139,7 +139,6 @@ void led_display_refresh(struct led_display* ld)
 
 void led_display_show(struct led_display* ld, unsigned low, unsigned high)
 {
-	unsigned v;
 	ld->dig[0] = '0' + (low % 10);
 	ld->dig[1] = '0' + (low / 10);
 	ld->dig[2] = '0' + (high % 10);
